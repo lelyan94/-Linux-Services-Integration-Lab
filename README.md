@@ -1,20 +1,34 @@
 # 🐧 Linux Services Integration Lab
 
-This lab focuses on integrating a Linux server into a Windows domain environment and deploying key services such as Apache, FTP, and SMB file sharing. It includes domain authentication, remote management, service configuration, and access control testing across multiple user roles.
+This lab focuses on migrating core services — web hosting, FTP, and file sharing — from Windows Server to a Linux server integrated with Active Directory. The Linux server is joined to the Windows domain and configured to authenticate domain users, while hosting websites, FTP, and Samba shares with proper permissions and encryption. Internal and remote access were tested using multiple domain users.
 
 ![Image](https://github.com/user-attachments/assets/3705e2aa-1a7f-4e65-9ef1-c3e705bd8d73)
 
 ---
 
-## 🛠️ Tools Used
 
-- VMware Workstation
+## 🛠️ Tools & Technologies
+
 - Ubuntu Linux Server
-- Windows Server (with RSAT tools)
-- Windows 10 Clients
-- Domain Users: `Erica`, `Trish`, `Ernie`
+- Windows Server (AD, DNS)
+- Windows 10 Internal Client
+- Domain Users: Erica, Trish, Ernie
+- Services: Apache2, vsftpd with SSL, Samba, Kerberos/SSSD
+- Tools: RSAT, PuTTY, MySQL
 
 ---
+
+## 📁 Summary of What Was Done
+
+- ✅ Joined Linux server to the Windows domain using Kerberos
+- ✅ Migrated and configured:
+  - Apache web services with virtual hosts
+  - FTP server with SSL and permission-based access
+  - SMB shares with custom access levels
+- ✅ Verified domain user access to all services (web, shares, FTP)
+- ✅ Set permissions using domain and local users
+- ✅ Enabled remote Linux access via SSH and Windows RSAT tools
+- ✅ Tested access for domain users from internal client
 
 ## 🧩 Project Overview
 
@@ -26,11 +40,12 @@ This lab focuses on integrating a Linux server into a Windows domain environment
 
 ---
 
-## 🖥️ Internal Client (Domain Administrator)
+## 🖥️ Internal Client (Administrator Access)
 
-### 🔹 Server Manager
+### 🔹 RSAT – Server Manager
 
-Opened via RSAT tools to verify both Windows and Linux servers are listed and managed.
+Added both the Domain Controller and VPN Server to Server Manager from the Internal Client. Performance monitoring is enabled.
+
 
 ![Image](https://github.com/user-attachments/assets/ddee36c1-b61f-44d6-b4f1-f078443e6915)
 
@@ -38,15 +53,18 @@ Opened via RSAT tools to verify both Windows and Linux servers are listed and ma
 
 ### 🔹 Active Directory Users and Computers
 
-Shows that the Linux machine has been successfully added to the domain.
+Confirmed the Linux server I added to Active Directory as a computer object.
 
 ![Image](https://github.com/user-attachments/assets/aa477bd2-20c3-4792-acf7-9f094fc0a6b0)
 
 ---
 
-### 🔹 SSH to Linux Server as Domain User
+## 🔐 Domain-Based SSH Access
 
-Logged into Linux from a Windows client using SSH as `erica@domain`, then switched to root. Below is the output of the `id` command confirming domain integration.
+### 🔹 SSH to Linux as Domain User
+
+Logged in via SSH as `erica@domain`, then switched to root using `su -l`.  
+The `id` command confirms domain-based identity.
 
 ![Image](https://github.com/user-attachments/assets/de50b85d-ea26-4cf3-8742-136132c53eb7)
 
@@ -54,24 +72,29 @@ Logged into Linux from a Windows client using SSH as `erica@domain`, then switch
 
 ---
 
-## 🔧 Linux Server – Service Configuration
+## 🌐 Apache Web Server Configuration
 
-### 🔹 Apache Configuration
+### 🔹 Virtual Host Setup & Bindings
 
-This section shows:
-- Apache virtual host directory structure
-- Website bindings 
-- Virtual host configurations with domain integration
+Two websites configured using Apache:
+- **linwww** (open to all, with MySQL-backed form)
+- **linstaff** (restricted to specific users)
+
+Screenshots show:
+- Apache site folders
+- Virtual host files
+- Bindings to domain-based hostnames
 
 ![Image](https://github.com/user-attachments/assets/b7827dee-fd30-4d65-8925-82b4eb2f3704)
 
 ---
 
-### 🔹 FTP Server with TLS
+## 🔒 FTP Server with SSL
 
-Displays:
-- FTP site configuration
-- Certificate used for secure FTP access
+### 🔹 Configuration with Certificate
+
+Configured `vsftpd` with SSL support.  
+FTP access limited to `Simon` and `Trish`, using domain or local accounts.
 
 ![Image](https://github.com/user-attachments/assets/5e6c5d2c-0cc1-410f-b204-9a7cb023690a)
 
@@ -79,35 +102,38 @@ Displays:
 
 ---
 
-### 🔹 SMB File Shares
+## 📂 SMB Shares Configuration
 
-Screenshots of:
-- Shares created (e.g., honeytoo, stinger)
-- Share-level permissions
+### 🔹 Share Setup and Access
+
+Two shares created:
+- `honeytoo` – read-only for everyone
+- `stinger` – read/write for Erica and Ernie only
 
 ![Image](https://github.com/user-attachments/assets/dad296c4-6a07-49a8-83aa-e9c6c2e50437)
 
 ---
 
-### 🔹 `testparm` Output
+### 🔹 testparm Output
 
-Displays the effective Samba configuration and validates the syntax.
+Confirms that the Samba config syntax is correct and all shares are readable.
 
 ![Image](https://github.com/user-attachments/assets/4edf2c74-a979-45a1-a87c-20561b258ea4)
 
 ---
 
-### 🔹 `realm list` Output
 
-Verifies Linux machine is enrolled in the domain and lists SSSD configuration.
+### 🔹 realm list Output
+
+Displays current domain join status and SSSD config from Linux.
 
 ![Image](https://github.com/user-attachments/assets/a7243fd0-0e2d-446a-aade-55782494468d)
 
 ---
 
-### 🔹 File Permissions for Apache & FTP Content
+### 🔹 File Permissions (Apache & FTP)
 
-Shows Linux folder-level permissions for hosted content directories.
+Linux file ownership and permission settings for Apache and FTP directories are shown.
 
 ![Image](https://github.com/user-attachments/assets/8a2668e5-74e1-4440-be1b-d149d96ad5fd)
 
@@ -115,28 +141,29 @@ Shows Linux folder-level permissions for hosted content directories.
 
 ---
 
-## 👩‍💻 Internal Client: User Trish
+## 👩‍💻 Internal User Testing (Trish)
 
-### 🔹 whoami
+### 🔹 whoami Output
 
-Confirms domain identity of logged-in user.
+Confirms Trish is logged in with her domain credentials.
 
 ![Image](https://github.com/user-attachments/assets/f1062687-ec8a-4126-8ef1-8ab573e250b0)
 
 ---
 
-### 🔹 Accessing Linwww Website
+### 🔹 Accessing `linwww`
 
-Browser prompt and successful login to `linwww` with database interaction capabilities (e.g., adding a user).
+Login prompt appears for form submission.  
+Trish is able to submit and view form input data.
 
 ![Image](https://github.com/user-attachments/assets/9a8258f5-ae73-4a61-b4bd-7c6c96c6ae66)
 ![Image](https://github.com/user-attachments/assets/0b5f2da5-01bd-4d51-8a1f-dd4b5dfe6c1e)
 
 ---
 
-### 🔹 Accessing Linstaff
+### 🔹 Accessing `linstaff`
 
-User `Trish` accesses restricted `linstaff` site with appropriate role.
+Successfully logs in and accesses restricted site.
 
 ![Image](https://github.com/user-attachments/assets/0495bb5f-68f4-443d-a73c-77bfbcb1b154)
 
@@ -144,28 +171,28 @@ User `Trish` accesses restricted `linstaff` site with appropriate role.
 
 ---
 
-### 🔹 FTP Upload Access
+### 🔹 FTP Write Access
 
-Trish is able to log in and write to the FTP directory.
+Trish can log in to the FTP server and upload files.
 
 ![Image](https://github.com/user-attachments/assets/cb5a4df6-850f-49fc-9c92-f206a5e82e80)
 ![Image](https://github.com/user-attachments/assets/5bfbebdc-91c6-41e8-8b6d-38711841d082)
 
 ---
 
-### 🔹 Access to honeytoo Share (Read-Only)
+### 🔹 Access to `honeytoo` (Read-Only)
 
-Can browse and read from the share but cannot modify or write.
+Can browse and read, but not write.
 
 ![Image](https://github.com/user-attachments/assets/ad773cd4-5dcd-4b57-b619-60e53645ff80)
 
 ---
 
-## 👨‍💻 Internal Client: User Ernie
+## 👨‍💻 Internal User Testing (Ernie)
 
-### 🔹 Linstaff Website (Access Denied)
+### 🔹 Accessing `linstaff` (Denied)
 
-Ernie is denied access to the staff-only site, verifying role-based restriction.
+Attempt to access restricted staff site fails.
 
 ![Image](https://github.com/user-attachments/assets/e20a54c1-bf13-4267-b7e7-4ef8ace8d9a8)
 
@@ -173,9 +200,9 @@ Ernie is denied access to the staff-only site, verifying role-based restriction.
 
 ---
 
-### 🔹 Linwww Website (Access Allowed)
+### 🔹 Accessing `linwww` (Allowed)
 
-Ernie is allowed to access the public Linwww website.
+Public website opens without issue.
 
 ![Image](https://github.com/user-attachments/assets/2cc964d4-2bfe-4c95-adb2-021a436e2f46)
 
@@ -183,21 +210,34 @@ Ernie is allowed to access the public Linwww website.
 
 ---
 
-### 🔹 Stinger Share (Read/Write)
+### 🔹 Accessing `stinger` (Full Access)
 
-Ernie has full access to the stinger share, including write capability.
+Has read/write permissions on stinger share.
 
 ![Image](https://github.com/user-attachments/assets/2950fb5c-9e6d-4733-945f-b269ed5cb4a8)
 
 ---
 
-### 🔹 SSH to Linux via PuTTY
+### 🔹 SSH Access via PuTTY
 
-Logged in using domain credentials, proving Linux accepts domain-based SSH logins.
+Successfully logs into Linux with domain credentials using PuTTY.
 
 ![Image](https://github.com/user-attachments/assets/af694fa4-24ba-47cc-9466-1a60f5b0846a)
 
 ---
+## 🧾 Final Summary
+
+This lab successfully demonstrates how to migrate and host key services — web, FTP, and file sharing — on a Linux server fully integrated with a Windows domain environment. Each service was configured to respect domain-level authentication and access control, providing a realistic enterprise-ready setup.
+
+Key outcomes:
+- ✅ Full domain integration of the Linux server with Kerberos authentication
+- ✅ Seamless Apache virtual host deployment and secure form handling
+- ✅ SSL-secured FTP server with user-specific permissions
+- ✅ Domain-aware Samba shares with tiered access levels
+- ✅ Remote access and administrative management using RSAT and SSH
+- ✅ User-based testing validated all permission levels and access boundaries
+
+This lab provides a comprehensive look at hybrid infrastructure design, where Linux and Windows services coexist securely and efficiently within the same network.
 
 
 
